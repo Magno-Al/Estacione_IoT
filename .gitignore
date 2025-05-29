@@ -1,0 +1,68 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+
+# Diretório de dependências
+node_modules/
+jspm_packages/
+typings/ # Para TypeScript, se usado
+
+# Arquivos de build temporários ou de output
+dist/
+build/
+coverage/
+*.out
+
+# Arquivos de sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Arquivos de IDEs e editores
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arquivos de teste (relatórios, etc.)
+coverage/
+*.lcov
+
+# Arquivos específicos do Docker
+# docker-compose.override.yml
+
+# Outros
+.nyc_output
+
+# Se você usar Yarn e quiser ignorar o cache
+.yarnclean
+.yarn-tarball.tgz
+.yarn-integrity
+
+# Arquivos de configuração de bundlers
+# .cache

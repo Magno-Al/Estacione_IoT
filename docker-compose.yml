@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parking-api-app
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/parking_db
+      PORT: ${PORT:-3000}
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./server.js:/usr/src/app/server.js
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:latest
+    container_name: parking-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - parking-db-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  parking-db-data:
+    # external: true 
