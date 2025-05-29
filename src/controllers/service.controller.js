@@ -1,4 +1,5 @@
 const ServiceRecord = require('../models/serviceRecord.model');
+const CustomerRegistry = require('../models/customerRegistry.model');
 
 exports.recordEntry = async (req, res) => {
   try {
