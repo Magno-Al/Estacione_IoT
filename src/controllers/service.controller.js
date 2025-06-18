@@ -134,3 +134,46 @@ exports.getActiveVehicleCount = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving active vehicle count', error: error.message });
   }
 };
+
+exports.getProfitByDate = async (req, res) => {
+  try {
+    const dateStr = req.params.date;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return res.status(400).json({ message: 'Formato de data invalido. Use YYYY-MM-DD.' });
+    }
+
+    const startDate = new Date(`${dateStr}T00:00:00.000Z`);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
+
+    const result = await ServiceRecord.aggregate([
+      {
+        $match: {
+          in_service: false,
+          exit_timestamp: {
+            $gte: startDate,
+            $lt: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total_profit: { $sum: "$amount_paid" }
+        }
+      }
+    ]);
+
+    const profit = result.length > 0 ? result[0].total_profit : 0;
+
+    res.status(200).json({
+      date: dateStr,
+      total_profit: profit
+    });
+
+  } catch (error) {
+    console.error("Error in getProfitByDate:", error);
+    res.status(500).json({ message: 'Error retrieving profit data', error: error.message });
+  }
+};
