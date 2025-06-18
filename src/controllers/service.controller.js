@@ -120,3 +120,17 @@ exports.calculateCurrentFee = async (req, res) => {
     res.status(500).json({ message: 'Error calculating fee for service', error: error.message });
   }
 };
+
+exports.getActiveVehicleCount = async (req, res) => {
+  try {
+    const count = await ServiceRecord.countDocuments({ in_service: true });
+
+    res.status(200).json({
+      message: 'Contagem de veículos feita com sucesso.',
+      active_vehicles: count
+    });
+  } catch (error) {
+    console.error("Error in getActiveVehicleCount:", error); // Log do erro no servidor
+    res.status(500).json({ message: 'Error retrieving active vehicle count', error: error.message });
+  }
+};

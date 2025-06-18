@@ -6,5 +6,6 @@ router.post('/entry', serviceController.recordEntry);
 router.put('/exit/:license_plate', serviceController.recordExit);
 router.get('/', serviceController.getAllServiceRecords);
 router.get('/calculate-fee/:license_plate', serviceController.calculateCurrentFee);
+router.get('/active-count', serviceController.getActiveVehicleCount);
 
 module.exports = router;
