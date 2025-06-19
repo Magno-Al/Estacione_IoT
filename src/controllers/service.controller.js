@@ -177,3 +177,33 @@ exports.getProfitByDate = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving profit data', error: error.message });
   }
 };
+
+exports.getEntryCountByDate = async (req, res) => {
+  try {
+    const dateStr = req.params.date;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return res.status(400).json({ message: 'Invalid date format. Please use YYYY-MM-DD.' });
+    }
+
+    const startDate = new Date(`${dateStr}T00:00:00.000Z`);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
+
+    const count = await ServiceRecord.countDocuments({
+      entry_timestamp: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    });
+
+    res.status(200).json({
+      date: dateStr,
+      entry_count: count
+    });
+
+  } catch (error) {
+    console.error("Error in getEntryCountByDate:", error);
+    res.status(500).json({ message: 'Error retrieving entry count data', error: error.message });
+  }
+};
