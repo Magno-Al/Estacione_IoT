@@ -38,33 +38,33 @@ exports.recordEntry = async (req, res) => {
   }
 };
 
-exports.recordExit = async (req, res) => {
-  try {
-    const { license_plate } = req.params;
-    const { amount_paid, fee_amount } = req.body;
+// exports.recordExit = async (req, res) => {
+//   try {
+//     const { license_plate } = req.params;
+//     const { amount_paid, fee_amount } = req.body;
 
-    const serviceRecord = await ServiceRecord.findOneAndUpdate(
-      { license_plate: license_plate, in_service: true },
-      { 
-        $set: { 
-          in_service: false, 
-          exit_timestamp: new Date(),
-          fee_amount: fee_amount || 0,
-          amount_paid: amount_paid || 0,
-          is_paid: (amount_paid || 0) >= (fee_amount || 0)
-        } 
-      },
-      { new: true }
-    );
+//     const serviceRecord = await ServiceRecord.findOneAndUpdate(
+//       { license_plate: license_plate, in_service: true },
+//       { 
+//         $set: { 
+//           in_service: false, 
+//           exit_timestamp: new Date(),
+//           fee_amount: fee_amount || 0,
+//           amount_paid: amount_paid || 0,
+//           is_paid: (amount_paid || 0) >= (fee_amount || 0)
+//         } 
+//       },
+//       { new: true }
+//     );
 
-    if (!serviceRecord) {
-      return res.status(404).json({ message: 'Active service record not found for this license plate or already exited.' });
-    }
-    res.status(200).json({ message: 'Vehicle exit recorded successfully', record: serviceRecord });
-  } catch (error) {
-    res.status(400).json({ message: 'Error recording vehicle exit', error: error.message });
-  }
-};
+//     if (!serviceRecord) {
+//       return res.status(404).json({ message: 'Active service record not found for this license plate or already exited.' });
+//     }
+//     res.status(200).json({ message: 'Vehicle exit recorded successfully', record: serviceRecord });
+//   } catch (error) {
+//     res.status(400).json({ message: 'Error recording vehicle exit', error: error.message });
+//   }
+// };
 
 exports.getAllServiceRecords = async (req, res) => {
   try {
@@ -231,5 +231,30 @@ exports.confirmPayment = async (req, res) => {
   } catch (error) {
     console.error("Error in confirmPayment:", error);
     res.status(500).json({ message: 'Error confirming payment', error: error.message });
+  }
+};
+
+exports.recordExit = async (req, res) => {
+  try {
+    const { license_plate } = req.params;
+
+    const serviceRecord = await ServiceRecord.findOneAndUpdate(
+      { license_plate: license_plate.toUpperCase().trim(), in_service: true }, // Critério de busca
+      { 
+        $set: { 
+          in_service: false, 
+          exit_timestamp: new Date()
+        } 
+      },
+      { new: true }
+    );
+
+    if (!serviceRecord) {
+      return res.status(404).json({ message: 'Nenhum registro de serviço ativo encontrado para esta placa.' });
+    }
+
+    res.status(200).json({ message: 'Saída do veículo finalizada com sucesso no banco de dados.', record: serviceRecord });
+  } catch (error) {
+    res.status(400).json({ message: 'Erro ao finalizar a saída do veículo.', error: error.message });
   }
 };
