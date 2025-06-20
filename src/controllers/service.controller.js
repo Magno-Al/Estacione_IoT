@@ -207,3 +207,29 @@ exports.getEntryCountByDate = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving entry count data', error: error.message });
   }
 };
+
+exports.confirmPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const serviceRecord = await ServiceRecord.findById(id);
+
+    if (!serviceRecord) {
+      return res.status(404).json({ message: 'Service record not found.' });
+    }
+    
+    serviceRecord.amount_paid = serviceRecord.fee_amount;
+    serviceRecord.is_paid = true;
+
+    await serviceRecord.save();
+
+    res.status(200).json({
+      message: 'Payment confirmed successfully.',
+      updated_record: serviceRecord
+    });
+
+  } catch (error) {
+    console.error("Error in confirmPayment:", error);
+    res.status(500).json({ message: 'Error confirming payment', error: error.message });
+  }
+};
