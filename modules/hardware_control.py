@@ -1,28 +1,30 @@
 # modules/hardware_control.py
-# import RPi.GPIO as GPIO # Comentado para teste sem hardware
-import time
+import RPi.GPIO as GPIO
 import config
 
 def setup():
-    """Configura o módulo de hardware para o modo de simulação."""
-    print("MÓDULO HARDWARE: Modo de simulação ativado (sem controle de GPIO).")
+    """Configura os pinos da GPIO."""
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(config.LED_GREEN_PIN, GPIO.OUT)
+    GPIO.setup(config.LED_RED_PIN, GPIO.OUT)
+    print("MÓDULO HARDWARE: GPIO configurada.")
+    set_gate_closed() # Garante o estado inicial "fechado"
 
-def open_gate():
-    """Simula a ação de abrir a cancela."""
-    print("SIMULAÇÃO HARDWARE: Abrindo cancela...")
-    print("SIMULAÇÃO HARDWARE: LED Verde LIGADO / LED Vermelho DESLIGADO")
-    time.sleep(1) # Simula um tempo para a ação ocorrer
-    print("SIMULAÇÃO HARDWARE: Cancela estaria aberta.")
+def set_gate_open():
+    """APENAS define o estado da passagem como ABERTA (LED verde aceso)."""
+    print("HARDWARE: Passagem liberada (LED Verde LIGADO).")
+    GPIO.output(config.LED_RED_PIN, GPIO.LOW)
+    GPIO.output(config.LED_GREEN_PIN, GPIO.HIGH)
+    # Futuramente, aqui você acionaria o motor da cancela
 
-def close_gate():
-    """Simula a ação de fechar a cancela."""
-    print("SIMULAÇÃO HARDWARE: Fechando cancela...")
-    print("SIMULAÇÃO HARDWARE: LED Verde DESLIGADO / LED Vermelho LIGADO")
-
-def block_passage():
-    """Simula a ação de bloquear a passagem."""
-    print("SIMULAÇÃO HARDWARE: Passagem bloqueada (LED Vermelho LIGADO).")
+def set_gate_closed():
+    """APENAS define o estado da passagem como FECHADA (LED vermelho aceso)."""
+    print("HARDWARE: Passagem bloqueada/fechada (LED Vermelho LIGADO).")
+    GPIO.output(config.LED_GREEN_PIN, GPIO.LOW)
+    GPIO.output(config.LED_RED_PIN, GPIO.HIGH)
 
 def cleanup():
-    """Simula a limpeza dos recursos da GPIO."""
-    print("MÓDULO HARDWARE: Simulação de limpeza da GPIO finalizada.")
+    """Limpa a configuração da GPIO."""
+    print("MÓDULO HARDWARE: Limpando GPIO...")
+    GPIO.cleanup()
