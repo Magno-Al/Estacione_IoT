@@ -116,5 +116,20 @@ exports.removeVehicleFromCustomer = async (req, res) => {
   }
 }
 
+exports.getCustomerByPlate = async (req, res) => {
+  try {
+    const { plate } = req.params;
+
+    const customer = await CustomerRegistry.findOne({ vehicles: plate.toUpperCase() });
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found for this plate.' });
+    }
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching customer by plate', error: error.message });
+  }
+};
+
 // exports.updateCustomer = async (req, res) => { ... };
 // exports.deleteCustomer = async (req, res) => { ... };
