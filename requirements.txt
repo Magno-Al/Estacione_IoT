@@ -1,0 +1,5 @@
+requests
+RPi.GPIO
+opencv-python
+pytesseract
+picamera2
