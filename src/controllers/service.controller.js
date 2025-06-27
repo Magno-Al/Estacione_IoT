@@ -223,6 +223,13 @@ exports.confirmPayment = async (req, res) => {
 
     await serviceRecord.save();
 
+    const dateStr = serviceRecord.exit_timestamp.toISOString().split('T')[0];
+    const payload = {
+      event: 'PROFIT_DATA_UPDATED',
+      date: dateStr
+    };
+    mqttService.publish('parking/data/updates', JSON.stringify(payload), { retain: true });
+
     res.status(200).json({
       message: 'Payment confirmed successfully.',
       updated_record: serviceRecord
