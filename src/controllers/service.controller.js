@@ -32,7 +32,10 @@ exports.recordEntry = async (req, res) => {
 
     const newServiceRecord = new ServiceRecord(newServiceRecordData);
     await newServiceRecord.save();
-    res.status(201).json(newServiceRecord);
+    if (newServiceRecord) {
+        await publishOccupancy();
+        res.status(201).json(newServiceRecord);
+    }
   } catch (error) {
     res.status(400).json({ message: 'Error recording vehicle entry', error: error.message });
   }
@@ -284,7 +287,6 @@ exports.getEntryCountByDate = async (req, res) => {
 exports.confirmPayment = async (req, res) => {
   try {
     const { id } = req.params;
-
     const serviceRecord = await ServiceRecord.findById(id);
 
     if (!serviceRecord) {
@@ -295,13 +297,7 @@ exports.confirmPayment = async (req, res) => {
     serviceRecord.is_paid = true;
 
     await serviceRecord.save();
-
-    const dateStr = serviceRecord.exit_timestamp.toISOString().split('T')[0];
-    const payload = {
-      event: 'PROFIT_DATA_UPDATED',
-      date: dateStr
-    };
-    mqttService.publish('parking/data/updates', JSON.stringify(payload), { retain: true });
+    await publishDailyProfit(new Date());
 
     res.status(200).json({
       message: 'Payment confirmed successfully.',
@@ -313,6 +309,39 @@ exports.confirmPayment = async (req, res) => {
     res.status(500).json({ message: 'Error confirming payment', error: error.message });
   }
 };
+
+// exports.confirmPayment = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const serviceRecord = await ServiceRecord.findById(id);
+
+//     if (!serviceRecord) {
+//       return res.status(404).json({ message: 'Service record not found.' });
+//     }
+    
+//     serviceRecord.amount_paid = serviceRecord.fee_amount;
+//     serviceRecord.is_paid = true;
+
+//     await serviceRecord.save();
+
+//     const dateStr = serviceRecord.exit_timestamp.toISOString().split('T')[0];
+//     const payload = {
+//       event: 'PROFIT_DATA_UPDATED',
+//       date: dateStr
+//     };
+//     mqttService.publish('parking/data/updates', JSON.stringify(payload), { retain: true });
+
+//     res.status(200).json({
+//       message: 'Payment confirmed successfully.',
+//       updated_record: serviceRecord
+//     });
+
+//   } catch (error) {
+//     console.error("Error in confirmPayment:", error);
+//     res.status(500).json({ message: 'Error confirming payment', error: error.message });
+//   }
+// };
 
 exports.recordExit = async (req, res) => {
   try {
@@ -332,9 +361,43 @@ exports.recordExit = async (req, res) => {
     if (!serviceRecord) {
       return res.status(404).json({ message: 'Nenhum registro de serviço ativo encontrado para esta placa.' });
     }
-
+    await publishOccupancy();
+    await publishAverageDuration();
     res.status(200).json({ message: 'Saída do veículo finalizada com sucesso no banco de dados.', record: serviceRecord });
   } catch (error) {
     res.status(400).json({ message: 'Erro ao finalizar a saída do veículo.', error: error.message });
   }
 };
+
+//======================================================================================================
+async function publishOccupancy() {
+    const count = await ServiceRecord.countDocuments({ in_service: true });
+    mqttService.publish('parking/status/occupancy', { current_vehicles: count }, { retain: true });
+}
+
+async function publishDailyProfit(date) {
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+    const result = await ServiceRecord.aggregate([
+        { $match: { is_paid: true, exit_timestamp: { $gte: startOfDay, $lte: endOfDay } } },
+        { $group: { _id: null, total_profit: { $sum: "$amount_paid" } } }
+    ]);
+
+    const profit = result.length > 0 ? result[0].total_profit : 0;
+    
+    mqttService.publish('parking/status/daily_profit', { total_profit_cents: profit * 100 }, { retain: true });
+}
+
+async function publishAverageDuration() {
+    const avgResult = await ServiceRecord.aggregate([
+        { $match: { in_service: false, exit_timestamp: { $ne: null }, entry_timestamp: { $ne: null } } },
+        { $project: { duration: { $subtract: ["$exit_timestamp", "$entry_timestamp"] } } },
+        { $group: { _id: null, avg_duration_ms: { $avg: "$duration" } } }
+    ]);
+
+    if (avgResult.length > 0) {
+        const avg_duration_minutes = (avgResult[0].avg_duration_ms / 1000) / 60;
+        mqttService.publish('parking/status/avg_duration', { avg_duration_minutes: avg_duration_minutes.toFixed(2) }, { retain: true });
+    }
+}

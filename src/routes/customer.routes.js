@@ -8,6 +8,7 @@ router.get('/:id', customerController.getCustomerById);
 router.get('/email/:email', customerController.getCustomerIdByEmail);
 router.get('/by-plate/:plate', customerController.getCustomerByPlate);
 router.put('/vehicle', customerController.addVehicleToCustomer);
+router.put('/:id', customerController.updateCustomer);
 router.delete('/vehicle', customerController.removeVehicleFromCustomer);
 
 // router.put('/:id', customerController.updateCustomer);

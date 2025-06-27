@@ -13,15 +13,16 @@ client.on('error', (err) => {
     console.error('Erro na conexão MQTT da API:', err);
 });
 
-const publish = (topic, message, options) => {
+const publish = (topic, payload, options = {}) => {
     if (client.connected) {
+        const message = JSON.stringify(payload);
         client.publish(topic, message, options, (err) => {
             if (err) {
-                console.error('Falha ao publicar mensagem MQTT:', err);
+                console.error(`Falha ao publicar MQTT no tópico ${topic}:`, err);
             }
         });
     } else {
-        console.error('Cliente MQTT não conectado. Mensagem não publicada.');
+        console.error(`Cliente MQTT não conectado. Mensagem para o tópico ${topic} não foi enviada.`);
     }
 };
 

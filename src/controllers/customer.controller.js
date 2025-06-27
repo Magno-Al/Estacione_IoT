@@ -17,7 +17,10 @@ exports.createCustomer = async (req, res) => {
 
     const newCustomer = new CustomerRegistry(newCustomerData);
     await newCustomer.save();
-    res.status(201).json(newCustomer);
+    if (newCustomer) {
+      await publishCustomerStats();
+      res.status(201).json(newCustomer);
+    }
   } 
   catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.customer_email) {
@@ -131,5 +134,34 @@ exports.getCustomerByPlate = async (req, res) => {
   }
 };
 
-// exports.updateCustomer = async (req, res) => { ... };
+exports.updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body; 
+
+    const updatedCustomer = await CustomerRegistry.findByIdAndUpdate(
+      id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCustomer) {
+      return res.status(404).json({ message: 'Customer not found.' });
+    }
+
+    await publishCustomerStats();
+
+    res.status(200).json({ message: 'Customer updated successfully', customer: updatedCustomer });
+
+  } catch (error) {
+    res.status(400).json({ message: 'Error updating customer', error: error.message });
+  }
+};
 // exports.deleteCustomer = async (req, res) => { ... };
+
+//==========================================================================================================
+async function publishCustomerStats() {
+    const active_count = await CustomerRegistry.countDocuments({ active: true });
+    const inactive_count = await CustomerRegistry.countDocuments({ active: false });
+    mqttService.publish('parking/status/customer_stats', { active: active_count, inactive: inactive_count }, { retain: true });
+}
