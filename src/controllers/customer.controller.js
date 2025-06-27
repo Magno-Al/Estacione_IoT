@@ -3,13 +3,14 @@ const mqttService = require('../services/mqttService');
 
 exports.createCustomer = async (req, res) => {
   try {
-    const { vehicles, customer_name, customer_email } = req.body;
+    const {id, vehicles, customer_name, customer_email } = req.body;
 
-    if (!vehicles || !customer_name || !customer_email) {
+    if (!id || !vehicles || !customer_name || !customer_email) {
       return res.status(400).json({ message: 'Vehicles, customer_name, and customer_email are required fields.' });
     }
 
     const newCustomerData = {
+      _id: id,
       vehicles,
       customer_name,
       customer_email

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const customerRegistrySchema = new mongoose.Schema({
+  _id: { type: String, required: true },
   vehicles: [{ type: String, uppercase: true, trim: true }],
   customer_name: { type: String, required: true },
   customer_email: { type: String, required: true, unique: true, lowercase: true, trim: true },
