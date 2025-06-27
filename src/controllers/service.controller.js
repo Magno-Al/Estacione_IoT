@@ -373,6 +373,7 @@ exports.recordExit = async (req, res) => {
 //======================================================================================================
 async function publishOccupancy() {
     const count = await ServiceRecord.countDocuments({ in_service: true });
+    console.log(`DEBUG MQTT: Publicando no tópico parking/status/occupancy. Contagem: ${count}`);
     mqttService.publish('parking/status/occupancy', { current_vehicles: count }, { retain: true });
 }
 
