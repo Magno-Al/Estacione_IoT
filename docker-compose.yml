@@ -1,21 +1,14 @@
-version: '3.8'
-
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: parking-api-app
+    env_file:
+      - .env
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
-    environment:
-      MONGODB_URI: mongodb://mongo:27017/parking_db
-      PORT: ${PORT:-3000}
-    volumes:
-      - ./src:/usr/src/app/src
-      - ./server.js:/usr/src/app/server.js
+      - "3000:3000"
     depends_on:
       - mongo
+      - mqtt
     restart: unless-stopped
 
   mongo:
@@ -27,6 +20,17 @@ services:
       - parking-db-data:/data/db
     restart: unless-stopped
 
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+
 volumes:
   parking-db-data:
-    # external: true 

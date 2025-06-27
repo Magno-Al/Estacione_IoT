@@ -1,4 +1,5 @@
 const CustomerRegistry = require('../models/customerRegistry.model');
+const mqttService = require('../services/mqttService'); 
 
 exports.createCustomer = async (req, res) => {
   try {
