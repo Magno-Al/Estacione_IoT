@@ -48,6 +48,74 @@ exports.getCustomerById = async (req, res) => {
   }
 };
 
+exports.getCustomerIdByEmail = async (req, res) => {
+  try {
+    const customer = await CustomerRegistry.findOne({ customer_email: req.params.email });
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    res.status(200).json({ customer_id: customer._id });
+  }
+  catch (error) {
+    res.status(500).json({ message: 'Error fetching customer by email', error: error.message });
+  }
+};
+
+exports.addVehicleToCustomer = async (req, res) => {
+  try {
+    const { customer_id, license_plate } = req.body;
+
+    if (!customer_id || !license_plate) {
+      return res.status(400).json({ message: 'Customer ID and license plate are required.' });
+    }
+
+    const normalizedPlate = license_plate.toUpperCase().trim();
+    const customer = await CustomerRegistry.findById(customer_id);
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    if (customer.vehicles.includes(normalizedPlate)) {
+      return res.status(400).json({ message: 'Vehicle already exists for this customer.' });
+    }
+
+    customer.vehicles.push(normalizedPlate);
+    await customer.save();
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding vehicle to customer', error: error.message });
+  }
+}
+
+exports.removeVehicleFromCustomer = async (req, res) => {
+  try {
+    const { customer_id, license_plate } = req.body;
+
+    if (!customer_id || !license_plate) {
+      return res.status(400).json({ message: 'Customer ID and license plate are required.' });
+    }
+
+    const normalizedPlate = license_plate.toUpperCase().trim();
+    const customer = await CustomerRegistry.findById(customer_id);
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    if (!customer.vehicles.includes(normalizedPlate)) {
+      return res.status(404).json({ message: 'Vehicle not found for this customer.' });
+    }
+
+    customer.vehicles = customer.vehicles.filter(vehicle => vehicle !== normalizedPlate);
+    await customer.save();
+    res.status(200).json(customer);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing vehicle from customer', error: error.message });
+  }
+}
+
 exports.getCustomerByPlate = async (req, res) => {
   try {
     const { plate } = req.params;

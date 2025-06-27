@@ -121,6 +121,79 @@ exports.calculateCurrentFee = async (req, res) => {
   }
 };
 
+exports.getEntryTimeByLicensePlate = async (req, res) => {
+  try {
+    const { license_plate } = req.params;
+
+    if (!license_plate) {
+      return res.status(400).json({ message: 'License plate is required in URL parameters.' });
+    }
+
+    const serviceRecord = await ServiceRecord.findOne({
+      license_plate: license_plate.toUpperCase().trim(),
+      in_service: true,
+    });
+
+    if (!serviceRecord) {
+      return res.status(404).json({ message: 'No active service record found for this license plate.' });
+    }
+
+    res.status(200).json({
+      message: 'Entry time retrieved successfully',
+      entry_timestamp: serviceRecord.entry_timestamp,
+      service_record_id: serviceRecord._id
+    });
+
+  } catch (error) {
+    console.error("Error in getEntryTimeByLicensePlate:", error);
+    res.status(500).json({ message: 'Error retrieving entry time', error: error.message });
+  }
+};
+
+exports.getServiceRecordByLicensePlate = async (req, res) => {
+  try {
+    const { license_plate } = req.params;
+
+    if (!license_plate) {
+      return res.status(400).json({ message: 'License plate is required in URL parameters.' });
+    }
+
+    const serviceRecord = await ServiceRecord.findOne({
+      license_plate: license_plate.toUpperCase().trim(),
+    });
+
+    if (!serviceRecord) {
+      return res.status(404).json({ message: 'No service record found for this license plate.' });
+    }
+
+    res.status(200).json(serviceRecord);
+  } catch (error) {
+    console.error("Error in getServiceRecordByLicensePlate:", error);
+    res.status(500).json({ message: 'Error retrieving service record', error: error.message });
+  }
+};
+
+exports.getServiceRecordsByCustomerId = async (req, res) => {
+  try {
+    const { customer_id } = req.params;
+
+    if (!customer_id) {
+      return res.status(400).json({ message: 'Customer ID is required in URL parameters.' });
+    }
+
+    const serviceRecords = await ServiceRecord.find({ customer_id: customer_id });
+
+    if (serviceRecords.length === 0) {
+      return res.status(404).json({ message: 'No service records found for this customer.' });
+    }
+
+    res.status(200).json(serviceRecords);
+  } catch (error) {
+    console.error("Error in getServiceRecordsByCustomerId:", error);
+    res.status(500).json({ message: 'Error retrieving service records for customer', error: error.message });
+  }
+};
+
 exports.getActiveVehicleCount = async (req, res) => {
   try {
     const count = await ServiceRecord.countDocuments({ in_service: true });
