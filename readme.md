@@ -4,7 +4,7 @@
 docker-compose up -d
 
 
-## 2. Espelha porta no Android (caso não funcione faça o passo 5)
+## 2. Espelha porta no Android (caso não funcione faça o passo 4)
 adb reverse tcp:3000 tcp:3000
 
 
